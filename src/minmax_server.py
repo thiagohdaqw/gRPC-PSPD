@@ -1,32 +1,51 @@
+import sys
+
 from concurrent import futures
-from functools import reduce
-from math import inf
+from math import inf, ceil
+from typing import Iterable
 
 import grpc
 import minmax_pb2
 import minmax_pb2_grpc
 
 
-def minmax(response: minmax_pb2.FindResponse, number: float):
-    response.max = max(number, response.max)
-    response.min = min(number, response.min)
-    return response
+def find_minmax(numbers: Iterable[float]):
+    numbers = sorted(numbers)
+    return minmax_pb2.FindResponse(min=numbers[0], max=numbers[-1])
 
 
 class MinMax(minmax_pb2_grpc.MinMaxServicer):
 
-    def Find(self, request, context):
-        response = minmax_pb2.FindResponse(min=inf, max=-inf)
-        return reduce(minmax, request.numbers, response)
+    def __init__(self, workers: futures.ProcessPoolExecutor, n_workers: int):
+        self.workers = workers
+        self.n_workers = n_workers
 
+    def Find(self, request, context):
+        offset = ceil(len(request.numbers)/self.n_workers)
+        numbers = (request.numbers[i*offset:(i+1)*offset] for i in range(self.n_workers))
+    
+        response = minmax_pb2.FindResponse(min=inf, max=-inf)
+        for r in self.workers.map(find_minmax, numbers):
+            response.min = min(r.min, response.min)
+            response.max = max(r.max, response.max)
+        return response
 
 def serve():
+    n_workers = int(sys.argv[1])
+    workers = futures.ProcessPoolExecutor(max_workers=n_workers)
+    
     server = grpc.server(futures.ThreadPoolExecutor())
-    minmax_pb2_grpc.add_MinMaxServicer_to_server(MinMax(), server)
-    server.add_insecure_port('[::]:50051')
+    minmax_pb2_grpc.add_MinMaxServicer_to_server(MinMax(workers, n_workers), server)
+    server.add_insecure_port(f'[::]:{sys.argv[2]}')
     server.start()
     server.wait_for_termination()
 
+    workers.shutdown()
+
 
 if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        print(f'Usage: {sys.argv[0]} N_WORKERS PORT')
+        sys.exit(1)
+
     serve()
