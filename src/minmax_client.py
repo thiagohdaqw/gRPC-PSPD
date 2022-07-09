@@ -1,3 +1,4 @@
+from functools import reduce
 import sys
 import grpc
 import minmax_pb2
@@ -15,6 +16,13 @@ def timeit():
     yield
     print(f"Tempo = {perf_counter() - start}s")
 
+
+def merge_responses(response, parcial):
+    response.min = min(parcial.min, response.min)
+    response.max = max(parcial.max, response.max)
+    return response
+
+
 def run(args):
     numbers, target = args
 
@@ -23,21 +31,23 @@ def run(args):
         request = minmax_pb2.FindRequest(numbers=numbers)
         return stub.Find(request)
 
+
 def main():
     MAX = 500_000
     numbers = [sqrt((i - uniform(0, MAX)/2)**2) for i in range(MAX)]
 
     n_workers = len(sys.argv) - 1
+    hosts = sys.argv[1:]
     offset = ceil(MAX/n_workers)
     numbers = [numbers[i*offset:(i+1)*offset] for i in range(n_workers)]
 
     with futures.ProcessPoolExecutor(max_workers=n_workers) as executor, timeit():
-        response = minmax_pb2.FindResponse(min=inf, max=-inf)
-        for r in executor.map(run, zip(numbers, sys.argv[1:])):
-            response.min = min(r.min, response.min)
-            response.max = max(r.max, response.max)
+        workers_args = zip(numbers, hosts)
+        responses = executor.map(run, workers_args)
 
-    print(f"MIN = {response.min}\nMAX = {response.max}")
+        final_response = reduce(merge_responses, responses, minmax_pb2.FindResponse(min=inf, max=-inf))
+
+    print(f"MIN = {final_response.min}\nMAX = {final_response.max}")
 
 
 if __name__ == '__main__':

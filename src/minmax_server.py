@@ -1,3 +1,4 @@
+from functools import reduce
 import sys
 
 from concurrent import futures
@@ -13,6 +14,10 @@ def find_minmax(numbers: Iterable[float]):
     numbers = sorted(numbers)
     return minmax_pb2.FindResponse(min=numbers[0], max=numbers[-1])
 
+def merge_responses(response, parcial):
+    response.min = min(parcial.min, response.min)
+    response.max = max(parcial.max, response.max)
+    return response
 
 class MinMax(minmax_pb2_grpc.MinMaxServicer):
 
@@ -24,11 +29,8 @@ class MinMax(minmax_pb2_grpc.MinMaxServicer):
         offset = ceil(len(request.numbers)/self.n_workers)
         numbers = (request.numbers[i*offset:(i+1)*offset] for i in range(self.n_workers))
     
-        response = minmax_pb2.FindResponse(min=inf, max=-inf)
-        for r in self.workers.map(find_minmax, numbers):
-            response.min = min(r.min, response.min)
-            response.max = max(r.max, response.max)
-        return response
+        responses = self.workers.map(find_minmax, numbers)
+        return reduce(merge_responses, responses, minmax_pb2.FindResponse(min=inf, max=-inf))
 
 def serve():
     n_workers = int(sys.argv[1])
