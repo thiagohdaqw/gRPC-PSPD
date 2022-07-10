@@ -13,6 +13,7 @@ import Minmax
 import Network.GRPC.HighLevel.Generated
 import Data.Vector(fromList)
 import System.Random(mkStdGen, randomR, StdGen)
+import System.CPUTime(getCPUTime)
 
 clientConfig :: ClientConfig
 clientConfig = ClientConfig { clientServerHost = "127.0.0.1"
@@ -31,13 +32,14 @@ calculate (list, seed) i = (x : list, newSeed)
         (random, newSeed) = randomR (0, maxNumbers) seed
         x = sqrt((i - (random/2))**2)
 
-numbers :: [Float]
-numbers = list
+generateNumbers :: StdGen -> [Float]
+generateNumbers seed = list
     where
-        (list, _) = foldl (calculate) ([], mkStdGen 7777) ([0..maxNumbers-1]::[Float])
+        (list, _) = foldl (calculate) ([], seed) ([0..maxNumbers-1]::[Float])
 
-main :: IO ()
-main = withGRPCClient clientConfig $ \client -> do
+
+run :: [Float] -> IO ()
+run numbers = withGRPCClient clientConfig $ \client -> do
   MinMax{..} <- minMaxClient client
 
   let req = FindRequest (fromList numbers)
@@ -49,3 +51,19 @@ main = withGRPCClient clientConfig $ \client -> do
         -> putStrLn $ "MIN = " ++ show minNumber ++ " MAX = " ++ show maxNumber
 
   return ()
+
+
+main :: IO ()
+main = do
+  seedTime <- getCPUTime
+  let numbers = generateNumbers (mkStdGen (fromIntegral seedTime))
+
+  startTime <- getCPUTime
+
+  run numbers
+
+  endTime <- getCPUTime
+  
+  let elapsedSeconds = (fromIntegral (endTime - startTime)) / (10^12)
+
+  putStrLn $ "Tempo = " ++ show elapsedSeconds ++ "s"

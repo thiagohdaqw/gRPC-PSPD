@@ -46,8 +46,8 @@ def main():
         responses = executor.map(run, workers_args)
 
         final_response = reduce(merge_responses, responses, minmax_pb2.FindResponse(min=inf, max=-inf))
+        print(f"MIN = {final_response.min}\nMAX = {final_response.max}")
 
-    print(f"MIN = {final_response.min}\nMAX = {final_response.max}")
 
 
 if __name__ == '__main__':
