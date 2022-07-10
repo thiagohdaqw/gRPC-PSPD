@@ -26,7 +26,11 @@ class MinMax(minmax_pb2_grpc.MinMaxServicer):
         self.n_workers = n_workers
 
     def Find(self, request, context):
-        offset = ceil(len(request.numbers)/self.n_workers)
+        length = len(request.numbers)
+        
+        print(f"INFO: {length} foram recebidos")
+
+        offset = ceil(length/self.n_workers)
         numbers = (request.numbers[i*offset:(i+1)*offset] for i in range(self.n_workers))
     
         responses = self.workers.map(find_minmax, numbers)
