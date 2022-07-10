@@ -1,4 +1,5 @@
 syntax = "proto3";
+package minmax;
 
 service MinMax {
     rpc Find (FindRequest) returns (FindResponse) {}
