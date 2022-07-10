@@ -44,6 +44,7 @@ executable gRPC-PSPD
       , text
       , vector
       , random
+      , timeit
     hs-source-dirs:   haskell
     default-language: Haskell2010
     ghc-options: -g -threaded -rtsopts -with-rtsopts=-N

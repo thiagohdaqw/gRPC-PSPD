@@ -11,9 +11,11 @@ module Main where
 
 import Minmax
 import Network.GRPC.HighLevel.Generated
-import Data.Vector(fromList)
+import Data.Vector(fromList, Vector)
 import System.Random(mkStdGen, randomR, StdGen)
 import System.CPUTime(getCPUTime)
+import Text.Printf
+import System.TimeIt
 
 clientConfig :: ClientConfig
 clientConfig = ClientConfig { clientServerHost = "127.0.0.1"
@@ -38,11 +40,11 @@ generateNumbers seed = list
         (list, _) = foldl (calculate) ([], seed) ([0..maxNumbers-1]::[Float])
 
 
-run :: [Float] -> IO ()
+run :: Vector Float -> IO ()
 run numbers = withGRPCClient clientConfig $ \client -> do
   MinMax{..} <- minMaxClient client
 
-  let req = FindRequest (fromList numbers)
+  let req = FindRequest numbers
   res <-  minMaxFind (ClientNormalRequest req 60 mempty)
   
   case res of
@@ -56,14 +58,6 @@ run numbers = withGRPCClient clientConfig $ \client -> do
 main :: IO ()
 main = do
   seedTime <- getCPUTime
-  let numbers = generateNumbers (mkStdGen (fromIntegral seedTime))
+  let numbers = fromList $ generateNumbers $ mkStdGen $ fromIntegral seedTime
 
-  startTime <- getCPUTime
-
-  run numbers
-
-  endTime <- getCPUTime
-  
-  let elapsedSeconds = (fromIntegral (endTime - startTime)) / (10^12)
-
-  putStrLn $ "Tempo = " ++ show elapsedSeconds ++ "s"
+  timeIt $ run numbers
