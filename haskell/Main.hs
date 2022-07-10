@@ -15,7 +15,7 @@ import Data.Vector(fromList, Vector)
 import System.Random(mkStdGen, randomR, StdGen)
 import System.CPUTime(getCPUTime)
 import Text.Printf
-import System.TimeIt
+
 
 clientConfig :: ClientConfig
 clientConfig = ClientConfig { clientServerHost = "127.0.0.1"
@@ -60,4 +60,4 @@ main = do
   seedTime <- getCPUTime
   let numbers = fromList $ generateNumbers $ mkStdGen $ fromIntegral seedTime
 
-  timeIt $ run numbers
+  run numbers
