@@ -59,7 +59,7 @@ class MinMax(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/MinMax/Find',
+        return grpc.experimental.unary_unary(request, target, '/minmax.MinMax/Find',
             minmax__pb2.FindRequest.SerializeToString,
             minmax__pb2.FindResponse.FromString,
             options, channel_credentials,

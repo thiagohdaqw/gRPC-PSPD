@@ -39,7 +39,6 @@ generateNumbers seed = list
     where
         (list, _) = foldl (calculate) ([], seed) ([0..maxNumbers-1]::[Float])
 
-
 run :: Vector Float -> IO ()
 run numbers = withGRPCClient clientConfig $ \client -> do
   MinMax{..} <- minMaxClient client
@@ -53,7 +52,6 @@ run numbers = withGRPCClient clientConfig $ \client -> do
         -> putStrLn $ "MIN = " ++ show minNumber ++ " MAX = " ++ show maxNumber
 
   return ()
-
 
 main :: IO ()
 main = do
