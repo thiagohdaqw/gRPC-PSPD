@@ -1,5 +1,7 @@
 syntax = "proto3";
+
 package minmax;
+option go_package = "./";
 
 service MinMax {
     rpc Find (FindRequest) returns (FindResponse) {}

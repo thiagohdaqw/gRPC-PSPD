@@ -15,13 +15,13 @@ class MinMaxStub(object):
             channel: A grpc.Channel.
         """
         self.Find = channel.unary_unary(
-                '/MinMax/Find',
-                request_serializer=minmax__pb2.FindRequest.SerializeToString,
-                response_deserializer=minmax__pb2.FindResponse.FromString,
-                )
+            '/MinMax/Find',
+            request_serializer=minmax__pb2.FindRequest.SerializeToString,
+            response_deserializer=minmax__pb2.FindResponse.FromString,
+        )
 
 
-class MinMaxServicer(object):
+class MinMaxService(object):
     """Missing associated documentation comment in .proto file."""
 
     def Find(self, request, context):
@@ -31,10 +31,10 @@ class MinMaxServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_MinMaxServicer_to_server(servicer, server):
+def add_MinMaxService_to_server(service, server):
     rpc_method_handlers = {
             'Find': grpc.unary_unary_rpc_method_handler(
-                    servicer.Find,
+                    service.Find,
                     request_deserializer=minmax__pb2.FindRequest.FromString,
                     response_serializer=minmax__pb2.FindResponse.SerializeToString,
             ),
@@ -59,7 +59,7 @@ class MinMax(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/minmax.MinMax/Find',
+        return grpc.experimental.unary_unary(request, target, '/MinMax/Find',
             minmax__pb2.FindRequest.SerializeToString,
             minmax__pb2.FindResponse.FromString,
             options, channel_credentials,

@@ -19,7 +19,7 @@ def merge_responses(response, parcial):
     response.max = max(parcial.max, response.max)
     return response
 
-class MinMax(minmax_pb2_grpc.MinMaxServicer):
+class MinMax(minmax_pb2_grpc.MinMaxService):
 
     def __init__(self, workers: futures.ProcessPoolExecutor, n_workers: int):
         self.workers = workers
@@ -41,7 +41,7 @@ def serve():
     workers = futures.ProcessPoolExecutor(max_workers=n_workers)
     
     server = grpc.server(futures.ThreadPoolExecutor())
-    minmax_pb2_grpc.add_MinMaxServicer_to_server(MinMax(workers, n_workers), server)
+    minmax_pb2_grpc.add_MinMaxService_to_server(MinMax(workers, n_workers), server)
     server.add_insecure_port(f'[::]:{sys.argv[2]}')
     server.start()
     server.wait_for_termination()

@@ -26,7 +26,7 @@ def merge_responses(response, parcial):
 def run(args):
     numbers, target = args
 
-    with grpc.insecure_channel(target) as channel:
+    with grpc.insecure_channel(target, options=(('grpc.enable_http_proxy', 0),)) as channel:
         stub = minmax_pb2_grpc.MinMaxStub(channel)
         request = minmax_pb2.FindRequest(numbers=numbers)
         return stub.Find(request)
@@ -47,7 +47,6 @@ def main():
 
         final_response = reduce(merge_responses, responses, minmax_pb2.FindResponse(min=inf, max=-inf))
         print(f"MIN = {final_response.min}\nMAX = {final_response.max}")
-
 
 
 if __name__ == '__main__':
